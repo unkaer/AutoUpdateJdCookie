@@ -105,36 +105,42 @@ async def human_like_mouse_move(page, from_x, to_x, y):
     """
     移动鼠标
     """
-    # 第一阶段：快速移动到目标附近，耗时 0.28 秒
-    fast_duration = 0.28
-    fast_steps = 50
-    fast_target_x = from_x + (to_x - from_x) * 0.8
+    # 第一阶段：快速移动到目标附近，耗时增加到0.5秒
+    fast_duration = 0.5
+    fast_steps = 80  # 增加步数使移动更平滑
+    fast_target_x = from_x + (to_x - from_x) * 0.75  # 减少第一阶段移动的距离
     fast_dx = (fast_target_x - from_x) / fast_steps
 
     for _ in range(fast_steps):
+        # 添加微小的上下抖动，模拟人手的不稳定性
+        抖动_y = y + random.uniform(-1.5, 1.5)
         from_x += fast_dx
-        await page.mouse.move(from_x, y)
+        await page.mouse.move(from_x, 抖动_y)
         await asyncio.sleep(fast_duration / fast_steps)
 
-    # 第二阶段：稍微慢一些，耗时随机 20 到 31 毫秒
-    slow_duration = random.randint(20, 31) / 1000
-    slow_steps = 10
-    slow_target_x = from_x + (to_x - from_x) * 0.9
+    # 第二阶段：中等速度，耗时增加到50-100毫秒
+    slow_duration = random.randint(50, 100) / 1000
+    slow_steps = 20  # 增加步数
+    slow_target_x = from_x + (to_x - from_x) * 0.85  # 调整目标位置
     slow_dx = (slow_target_x - from_x) / slow_steps
 
     for _ in range(slow_steps):
+        # 添加微小的上下抖动
+        抖动_y = y + random.uniform(-1.2, 1.2)
         from_x += slow_dx
-        await page.mouse.move(from_x, y)
+        await page.mouse.move(from_x, 抖动_y)
         await asyncio.sleep(slow_duration / slow_steps)
 
-    # 第三阶段：缓慢移动到目标位置，耗时 0.3 秒
-    final_duration = 0.3
-    final_steps = 20
+    # 第三阶段：缓慢移动到目标位置，耗时增加到0.8秒
+    final_duration = 0.8
+    final_steps = 40  # 显著增加步数使最后阶段更缓慢
     final_dx = (to_x - from_x) / final_steps
 
     for _ in range(final_steps):
+        # 添加微小的上下抖动
+        抖动_y = y + random.uniform(-1.0, 1.0)
         from_x += final_dx
-        await page.mouse.move(from_x, y)
+        await page.mouse.move(from_x, 抖动_y)
         await asyncio.sleep(final_duration / final_steps)
 
 
@@ -149,14 +155,18 @@ async def solve_slider_captcha(page, slider, distance, slide_difference):
     from_x = box['x'] + box['width'] / 2
     to_y = from_y = box['y'] + box['height'] / 2
 
-    # 模拟按住滑块
+    # 模拟按住滑块前先停留一小段时间
     await page.mouse.move(from_x, from_y)
+    await asyncio.sleep(random.uniform(0.3, 0.8))  # 增加按住前的等待时间
     await page.mouse.down()
+    await asyncio.sleep(random.uniform(0.1, 0.3))  # 按下后稍微停顿一下
 
     to_x = from_x + distance + slide_difference
     # 平滑移动到目标位置
     await human_like_mouse_move(page, from_x, to_x, to_y)
-
+    
+    # 到达目标后稍微停留再释放
+    await asyncio.sleep(random.uniform(0.2, 0.5))
     # 放开滑块
     await page.mouse.up()
 
@@ -166,10 +176,17 @@ async def new_solve_slider_captcha(page, slider, distance, slide_difference):
     distance = distance + slide_difference
     box = await slider.bounding_box()
     await page.mouse.move(box['x'] + 10 , box['y'] + 10)
+    await asyncio.sleep(random.uniform(0.3, 0.8))  # 增加按住前的等待时间
     await page.mouse.down()  # 模拟鼠标按下
-    await page.mouse.move(box['x'] + distance + random.uniform(8, 10), box['y'], steps=5)  # 模拟鼠标拖动，考虑到实际操作中可能存在的轻微误差和波动，加入随机偏移量
-    await asyncio.sleep(random.randint(1, 5) / 10)  # 随机等待一段时间，模仿人类操作的不确定性
-    await page.mouse.move(box['x'] + distance, box['y'], steps=10)  # 继续拖动滑块到目标位置
+    await asyncio.sleep(random.uniform(0.1, 0.3))  # 按下后稍微停顿一下
+    
+    # 增加steps数量并增加随机偏移范围
+    await page.mouse.move(box['x'] + distance + random.uniform(8, 15), box['y'], steps=15)  # 增加steps到15
+    await asyncio.sleep(random.uniform(0.3, 0.7))  # 增加等待时间范围到300-700毫秒
+    await page.mouse.move(box['x'] + distance, box['y'], steps=20)  # 增加steps到20
+    
+    # 到达目标后稍微停留再释放
+    await asyncio.sleep(random.uniform(0.2, 0.5))
     await page.mouse.up()  # 模拟鼠标释放，完成滑块拖动
     await asyncio.sleep(3)  # 等待3秒，等待滑块验证结果
 
