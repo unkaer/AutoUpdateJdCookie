@@ -30,9 +30,9 @@ jobs:
       
       # 构建 Docker 镜像
       - name: 构建 Docker 镜像
-        run: docker build . --file Dockerfile --tag ${{ secrets.DOCKERHUB_USERNAME }}/auto-update-jd-cookie:latest
+        run: docker build . --file Dockerfile --tag ${{ secrets.DOCKERHUB_USERNAME }}/aujdc:latest
       
       # 推送 Docker 镜像到 Docker Hub（仅在推送事件和手动触发时执行，PR 时不执行）
       - name: 推送到 Docker Hub
         if: ${{ github.event_name != 'pull_request' }}
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/auto-update-jd-cookie:latest
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/aujdc:latest
