@@ -7,6 +7,8 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  # 允许手动触发工作流
+  workflow_dispatch:
 
 jobs:
   build-and-push:
@@ -18,7 +20,7 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
       
-      # 登录到 Docker Hub（仅在推送事件时执行，PR 时不执行）
+      # 登录到 Docker Hub（仅在推送事件和手动触发时执行，PR 时不执行）
       - name: 登录 Docker Hub
         if: ${{ github.event_name != 'pull_request' }}
         uses: docker/login-action@v3
@@ -30,7 +32,7 @@ jobs:
       - name: 构建 Docker 镜像
         run: docker build . --file Dockerfile --tag ${{ secrets.DOCKERHUB_USERNAME }}/auto-update-jd-cookie:latest
       
-      # 推送 Docker 镜像到 Docker Hub（仅在推送事件时执行，PR 时不执行）
+      # 推送 Docker 镜像到 Docker Hub（仅在推送事件和手动触发时执行，PR 时不执行）
       - name: 推送到 Docker Hub
         if: ${{ github.event_name != 'pull_request' }}
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/auto-update-jd-cookie:latest
